@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 from einops import rearrange
-from model_utils import LayerNorm2d
+from .model_utils import LayerNorm2d
 
 class ContextAdditionAttention(nn.Module):
   def __init__(self, channels:int, reduction_ratio:int =1, num_heads: int = 8):

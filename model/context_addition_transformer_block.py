@@ -1,6 +1,6 @@
 from torch import nn
-from model_utils import ResidualAdd, LayerNorm2d
-from attention_blocks import ContextAdditionAttention
+from .model_utils import ResidualAdd, LayerNorm2d
+from .attention_blocks import ContextAdditionAttention
 from torchvision.ops import StochasticDepth
 
 class ConvFFN(nn.Sequential):

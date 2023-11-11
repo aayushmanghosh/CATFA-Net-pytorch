@@ -1,8 +1,8 @@
 import torch
 from torch import nn
 from typing import List
-from model_utils import LayerNorm2d, PatchMerging, chunks
-from context_addition_transformer_block import ContextAdditionTransformerBlock
+from .model_utils import LayerNorm2d, PatchMerging, chunks
+from .context_addition_transformer_block import ContextAdditionTransformerBlock
 
 
 class ContextAdditionTransformerStage(nn.Sequential):
