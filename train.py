@@ -54,153 +54,6 @@ PIN_MEMORY = False
 if args.pin_mem == "True":
   PIN_MEMORY = True
 
-
-
-class DoubleConv(nn.Module):
-  def __init__(self, in_channels, out_channels):
-    super(DoubleConv, self).__init__()
-    self.conv = nn.Sequential(
-        nn.Conv2d(in_channels, out_channels, 3, 1, 1, bias = False),
-        nn.BatchNorm2d(out_channels),
-        nn.ReLU(inplace = True),
-        nn.Conv2d(out_channels, out_channels, 3, 1, 1, bias = False),
-        nn.BatchNorm2d(out_channels),
-        nn.ReLU(inplace = True),
-    )
-  def forward(self,x):
-    return self.conv(x)
-
-def convrelu(in_channels, out_channels, kernel, padding):
-    return nn.Sequential(
-        nn.Conv2d(in_channels, out_channels, kernel, padding=padding),
-        nn.ReLU(inplace=True),
-    )
-
-class ConvNextDecBlock(nn.Module):
-  def __init__(self, input_dim, output_dim, stride, padding):
-    super(ConvNextDecBlock, self).__init__()
-
-    self.conv_block = nn.Sequential(
-        nn.Conv2d(input_dim, output_dim, kernel_size = 7, stride = 1, padding = 1, groups = output_dim),
-        nn.BatchNorm2d(output_dim),
-        nn.Conv2d(output_dim, output_dim, kernel_size = 1, stride = 1, padding = 1),
-        nn.GELU(approximate = 'none'),
-        nn.Conv2d(output_dim, output_dim, kernel_size = 1, stride = 1, padding = 1),
-        nn.BatchNorm2d(output_dim),
-    )
-
-    self.conv_skip = nn.Sequential(
-        nn.Conv2d(input_dim, output_dim, kernel_size = 3, stride = 1, padding = 1),
-        nn.BatchNorm2d(output_dim),
-    )
-
-    self.gelu = nn.GELU(approximate = 'none')
-
-  def forward(self, x):
-    return self.gelu(self.conv_block(x) + self.conv_skip(x))
-  
-class AttentionGate(nn.Module):
-  def __init__(self,F_g,F_l,F_int):
-        super(AttentionGate,self).__init__()
-        self.W_g = nn.Sequential(
-            nn.Conv2d(F_g, F_int, kernel_size=1,stride=1,padding=0,bias=False),
-            nn.BatchNorm2d(F_int)
-            )
-
-        self.W_x = nn.Sequential(
-            nn.Conv2d(F_l, F_int, kernel_size=1,stride=1,padding=0,bias=True),
-            nn.BatchNorm2d(F_int)
-        )
-
-        self.psi = nn.Sequential(
-            nn.Conv2d(F_int, 1, kernel_size=1,stride=1,padding=0,bias=True),
-            nn.BatchNorm2d(1),
-            nn.Sigmoid()
-        )
-
-        self.relu = nn.GELU(approximate="none")
-
-  def forward(self,g,x):
-        g1 = self.W_g(g)
-        g2 = self.relu(g1)
-
-        x1 = self.W_x(x)
-        psi = self.relu(g1+x1)
-        psi = self.psi(psi)
-        x = x*psi
-
-        return g2+x
-  
-class RFAUConvNext_Tiny(nn.Module):
-  def __init__(
-      self, encoder, n_class = 1
-  ):
-    super(RFAUConvNext_Tiny,self).__init__()
-    #Down part of convunext
-    self.encoder = encoder
-    self.base_layers = list(self.encoder.features.children())
-    self.layer0 = nn.Sequential(*self.base_layers[:2])
-    self.layer0_1x1 = convrelu(96,96,1,0) #out = 128
-    self.layer1 = nn.Sequential(*self.base_layers[2:4])
-    self.layer1_1x1 = convrelu(192,192,1,0) #out = 256
-    self.layer2 = nn.Sequential(*self.base_layers[4:6])
-    self.layer2_1x1 = convrelu(384,384,1,0) #out = 512
-
-    #bottleneck
-    self.bottleneck = nn.Sequential(*self.base_layers[6:]) #out = 1024
-    self.bott_1x1 = convrelu(768,768,1,0)
-    #Up part of convunext
-    self.ups = nn.ModuleList()
-
-    for feature in [384,192,96]:
-      self.ups.append(
-          nn.ConvTranspose2d(
-              feature*2, feature, kernel_size = 2, stride = 2,
-          )
-      )
-      self.ups.append(AttentionGate(F_g = feature, F_l = feature, F_int = feature))
-      self.ups.append(ConvNextDecBlock(feature*2, feature,1,1))
-
-    #Last conv layer
-    self.conv_last = nn.Conv2d(96, n_class, kernel_size = 1)
-
-  def forward(self, input):
-
-    layer0 = self.layer0(input)
-    layer1 = self.layer1(layer0)
-    layer2 = self.layer2(layer1)
-
-    bottleneck = self.bottleneck(layer2)
-    bottleneck = self.bott_1x1(bottleneck)
-
-    x = self.ups[0](bottleneck) #upsample 2
-    layer2 = self.layer2_1x1(layer2)
-    layer2 = self.ups[1](g = x, x = layer2)
-    x = torch.cat([x,layer2], dim = 1)
-    x = self.ups[2](x) #Double Convolutions
-
-    x = self.ups[3](x) #upsample1
-    layer1 = self.layer1_1x1(layer1)
-    layer1 = self.ups[4](g = x, x = layer1)
-    x = torch.cat([x,layer1] , dim = 1)
-    x = self.ups[5](x) #Double Convolutions
-
-    x = self.ups[6](x)
-    layer0 = self.layer0_1x1(layer0)
-    layer0 = self.ups[7](g=x, x=layer0)
-    x = torch.cat([x,layer0],dim = 1)
-    x = self.ups[8](x)
-
-    mask = self.conv_last(x)
-    # preds = torch.sigmoid(mask)
-    # preds = (preds > 0.5).float()
-
-    # for x in range(preds.size(dim = 0)):
-    #   mask[x] = numIslands(mask[x],preds[x])
-    # del preds
-
-    return nn.functional.interpolate(mask, size=(224,224), mode="bilinear", align_corners=False)
-
 def split_and_load(test_split):
   image_paths = sorted(list(paths.list_images(args.dir+ '/images')))
   mask_paths = sorted(list(paths.list_images(args.dir+ '/masks')))
@@ -245,11 +98,11 @@ def train_test_setup():
   model = None
 
   if args.model_size == 'small':
-    # if args.pretrained == "True":
-    #     model = CATFANet_Small(pretrained_encoder_backbone=True).to(DEVICE)
-    # else:
-    #     model = CATFANet_Small(pretrained_encoder_backbone=False).to(DEVICE)
-    model = RFAUConvNext_Tiny(convnext_tiny(weights = 'IMAGENET1K_V1')).to(DEVICE)
+    if args.pretrained == "True":
+        model = CATFANet_Small(pretrained_encoder_backbone=True).to(DEVICE)
+    else:
+        model = CATFANet_Small(pretrained_encoder_backbone=False).to(DEVICE)
+    
   else:
      if args.pretrained == "True":
         model = CATFANet_Large(pretrained_encoder_backbone=True).to(DEVICE)
