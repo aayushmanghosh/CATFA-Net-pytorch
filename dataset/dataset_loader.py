@@ -103,51 +103,28 @@ def get_loaders(
   return train_loader, val_loader
 
 def get_loaders_with_split(
-    image_dataset_path,
-    mask_dataset_path,
+    trainImages,
+    trainMasks,
+    testImages,
+    testMasks,
     batch_size,
     train_transform,
     val_transform,
-    test_split,
+    num_workers = 4,
     pin_memory = True,
 ):
-  image_paths = sorted(list(paths.list_images(image_dataset_path)))
-  mask_paths = sorted(list(paths.list_images(mask_dataset_path)))
-  # partition the data into training and testing splits using 85% of
-  # the data for training and the remaining 15% for testing
-  split = train_test_split(image_paths, mask_paths,
-    test_size=test_split, random_state=42)
 
-
-  # unpack the data split
-  (train_images, train_masks) = split[:2]
-  (test_images, test_masks) = split[2:]
-  print(len(test_images))
   # create the train and test datasets
-  train_ds = SegmentationDataset(
-    imagePaths=train_images, 
-    maskPaths=train_masks,
-	transform=train_transform
-    )
-  
-  val_ds = SegmentationDataset(
-    imagePaths=test_images, 
-    maskPaths=test_masks,
-    transform=val_transform
-  )
+  train_ds = SegmentationDataset(imagePaths=trainImages, maskPaths=trainMasks,
+	  transform=train_transform)
+  val_ds = SegmentationDataset(imagePaths=testImages, maskPaths=testMasks,
+    transform=val_transform)
 
-  train_loader = DataLoader(
-    train_ds, 
-    shuffle=True,
-	batch_size=batch_size, 
-    pin_memory=pin_memory,
-	num_workers = os.cpu_count())
-  
-
-  val_loader = DataLoader(val_ds, 
-      shuffle=False,
-	  batch_size = batch_size, 
-      pin_memory = pin_memory,
+  train_loader = DataLoader(train_ds, shuffle=True,
+	  batch_size=batch_size, pin_memory=pin_memory,
+	  num_workers = os.cpu_count())
+  val_loader = DataLoader(val_ds, shuffle=False,
+	  batch_size = batch_size, pin_memory = pin_memory,
 	  num_workers = os.cpu_count())
 
   return train_loader, val_loader
