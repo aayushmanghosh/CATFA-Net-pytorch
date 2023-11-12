@@ -7,10 +7,7 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data import DataLoader
 import pandas as pd
-import os
 import torch.optim as optim
-from torch import nn
-from torchvision.models import convnext_tiny
 import argparse
 
 parser = argparse.ArgumentParser()
