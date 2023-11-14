@@ -14,9 +14,23 @@ for installing the dependencies. Review and check the versions of the libraries 
 python, be sure to use the correct versions of the libraries.
 
 ## 2. Run train.py in Terminal
-Navigate to the directory containing train.py . The following are the arguments to be parsed from the terminal:
+Navigate to the directory containing train.py . 
+An example bash command for training CATFA-Net (this will load the small variant) would be:
+```bash
+python3 train.py /path/to/dataset
+--pre_split False --split 0.25
+--result_dir results --save True
+--save_file_name results/catfanet_small.pth.tar --num_epochs 50
+--lr 1e-4 --batch_size 8
+--model_size small --num_workers 2 --pin_mem True
+--optimizer AdamW --pretrained True
+--save_roc_pr False
+```
+The following are the detailed breakdown of the arguments that are parsed from the terminal:
 
-1. dir : Directory of the dataset. Inside the dataset directory, the data should be organized in the following manner:
+1. dir : Directory of the dataset. The dataset with binary labels might be pre-split into train and test sets.
+   Ensure that all the images and their corresponding masks have the same name. 
+   If the dataset is pre-split, the dataset folder should be organized in the following manner:
    
    ```raw
    a. '/train' : should contain training images.
@@ -28,6 +42,13 @@ Navigate to the directory containing train.py . The following are the arguments 
    d. '/test_masks' : should contain corresponding binary masks of the test images.
    ```
 
+   If the dataset directory does not have any predefined splits, the dataset folder should be organized as follows (use exact same name):
+
+   ```raw
+   1. '/images' : should contain the images.
+   2. '/masks' : should contain binary masks of the images.
+   ```
+   
 2. --pre_split: Boolean "True" or "False" values are taken. Mentions whether a dataset has predefined split or not.
       
 3. --split: If the dataset is not pre-split, mention the test split ratio. This value defaults to 0.2 .
@@ -57,15 +78,3 @@ Navigate to the directory containing train.py . The following are the arguments 
 15. --save_roc_pr: Boolean "True" or "False" values are taken and defaults to "False". If "True", two sheet containing information to plot ROC and PR curves will be generated respectively, which can be used   
                       to plot the corresponding curves in Origin.
   
-
-An example bash command for training CATFA-Net (this will load the small variant) would be:
-```bash
-python3 train.py /path/to/dataset
---pre_split False --split 0.25
---result_dir results --save True
---save_file_name results/catfanet_small.pth.tar --num_epochs 50
---lr 1e-4 --batch_size 8
---model_size small --num_workers 2 --pin_mem True
---optimizer AdamW --pretrained True
---save_roc_pr False
-```
