@@ -42,7 +42,7 @@ The following are the detailed breakdown of the arguments that are parsed from t
    d. '/test_masks' : should contain corresponding binary masks of the test images.
    ```
 
-   If the dataset directory does not have any predefined splits, the dataset folder should be organized as follows (use exact same name):
+   If the dataset directory does not have any predefined splits, the dataset folder should be organized as follows:
 
    ```raw
    1. '/images' : should contain the images.
