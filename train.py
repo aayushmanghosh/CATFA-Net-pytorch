@@ -114,7 +114,7 @@ def train_test_setup():
   if args.optimizer == 'sgd' or args.optimizer =='SGD':
      optimizer = optim.SGD(model.parameters(), lr = LEARNING_RATE)
   
-  else:
+  elif args.optimizer == 'adam' or args.optimizer == 'Adam':
      optimizer = optim.Adam(model.parameters(), lr = LEARNING_RATE)
 
   
@@ -154,6 +154,7 @@ def train_test_setup():
     print("Epoch:",epoch)
     train_loss = train_one_epoch(train_loader, model, optimizer, loss_fn, scaler)
 
+    #Save model in .pth.tar file
     if args.save == "True":
         checkpoint = {
           "state_dict":model.state_dict(),
@@ -161,10 +162,10 @@ def train_test_setup():
         }
         save_checkpoint(checkpoint, filename = args.save_file_name)
     
-    #check accuracy
+    #Compute metrics for one epoch
     test_one_epoch(val_loader, model, train_loss, loss_fn, device =DEVICE)
 
-    #print some examples
+    #Print batched validation results
     save_predictions_as_imgs(
         val_loader, model, folder = args.result_dir, device =DEVICE
     )
@@ -197,4 +198,6 @@ if __name__ == '__main__':
     train_test_setup()
     metric = get_metrics_data()
     df = pd.DataFrame(metric)
+    #Store Segmentation Metrics per Epoch in a .csv file
+    #Visualizations like Loss curves are generated in Origin pulling data from report.csv
     df.to_csv(args.result_dir + '/report.csv')
