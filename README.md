@@ -4,6 +4,16 @@ Official Pytorch code of "CATFA-Net: An Inspired Trans-Convolutional Network for
 ## Usage
 Train RFAUCNxt using a medical image dataset containing binary labels. For multi-class segmentation, the training script "train.py" needs to be modified.
 
+# 1. Install Dependencies
+
+Please prepare an environment with python = 3.10.x, and then use the command 
+```bash 
+pip install -r requirements.txt
+```
+for installing the dependencies. Review and check the versions of the libraries before installing. If you are running some other vesion of
+python, be sure to use the correct versions of the libraries.
+
+# 2. Run train.py in Terminal
 Arguments to be parsed from the terminal:
 
 1. dir : Directory of the dataset. Inside the dataset directory, the data should be organized in the following manner:
