@@ -2,7 +2,7 @@
 Official Pytorch code of "CATFA-Net: An Inspired Trans-Convolutional Network for Medical Image Segmentation" - IEEE TMI
 
 # Usage
-Train RFAUCNxt using a medical image dataset containing binary labels. For multi-class segmentation, the training script "train.py" needs to be modified.
+Train CATFA-Net using a medical image dataset containing binary labels. For multi-class segmentation, the training script "train.py" needs to be modified.
 
 ## 1. Install Dependencies
 
