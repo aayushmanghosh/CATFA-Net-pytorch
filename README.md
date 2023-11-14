@@ -47,4 +47,15 @@ Arguments to be parsed from the terminal:
 15. --save_roc_pr: Boolean "True" or "False" values are taken and defaults to "False". If "True", two sheet containing information to plot ROC and PR curves will be generated respectively, which can be used   
                       to plot the corresponding curves in Origin.
   
-  
+
+An example bash command for training CATFA-Net (this will load the small variant) would be:
+```bash
+python3 train.py /path/to/dataset
+--pre_split False --split 0.25
+--result_dir results --save True
+--save_file_name results/catfanet_small.pth.tar --num_epochs 50
+--lr 1e-4 --batch_size 8
+--model_size small --num_workers 2 --pin_mem True
+--optimizer AdamW --pretrained True
+--save_roc_pr False
+```
