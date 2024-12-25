@@ -1,5 +1,5 @@
 # CATFA-Net
-Official Pytorch code of "CATFA-Net: An Inspired Trans-Convolutional Network for Medical Image Segmentation" - IEEE TMI
+This repository contains code based on the paper "CATFA-Net: A Trans-Convolutional Approach for Accurate Medical Image Segmentation (submitted to Elsevier MedIA)". 
 
 # Usage
 Train CATFA-Net using a medical image dataset containing binary labels. For multi-class segmentation, the training script "train.py" needs to be modified.
